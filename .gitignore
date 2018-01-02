@@ -6,3 +6,5 @@ node_modules/
 **/*.css.map
 **/*.min.js
 **/*.min.js.map
+
+yarn-error.log
