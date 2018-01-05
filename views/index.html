@@ -2,12 +2,14 @@
 <html>
 <head>
     <title>Jingo Wiki Manager</title>
-    <script src="scripts/site.js"></script>
-    <link rel="stylesheet" href="styles/site.css" />
+    <script src="../scripts/site.js" defer></script>
+    <link rel="stylesheet" href="../styles/site.styl" />
 </head>
 <body>
     <main id="main">
-
+        <p>Hello, {{name}}</p>
+        <p><button @click="getVal">Get Val</button></p>
+        <p>Val: {{val}}</p>
     </main>
 </body>
 </html>

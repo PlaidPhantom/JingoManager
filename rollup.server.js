@@ -1,15 +1,13 @@
-import babel from 'rollup-plugin-babel';
-import uglify from 'rollup-plugin-uglify';
-import commonjs from 'rollup-plugin-commonjs';
+import replace from 'rollup-plugin-replace';
 
 export default {
     plugins: [
-        babel({
-            exclude: 'node_modules/**'
-        }),
-        uglify(),
-        commonjs()
+        replace({
+            'process.env.NODE_ENV': JSON.stringify(process.env.BUILD || 'development')
+        })
     ],
-    external: ['express', 'body-parser', 'ws', 'source-map-support']
+    external: ['express', 'source-map-support'],
+    watch: {
+        clearScreen: false
+    }
 };
-r

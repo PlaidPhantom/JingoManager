@@ -1,19 +1,28 @@
 import { install } from 'source-map-support';
 import express from 'express';
-import bodyParser from 'body-parser';
+import env from '../lib/test.js';
+
+console.log(env);
 
 install();
 
 var app = express();
 
-app.use('/styles', express.static('styles'));
-app.use('/scripts', express.static('scripts'));
-//app.use('/nm', express.static('node_modules'))
+if(process.env.NODE_ENV === 'production') {
+    app.use('/', express.static('dist'));
+}
+else {
+    app.use(function(request, response, next) {
+        // set header so running on different port in dev doesn't cause CORS issues.
+        response.set('Access-Control-Allow-Origin', '*')
+        next();
+    });
+}
 
-app.use(bodyParser.json({ strict: false }));
+app.use(express.json({ strict: false }));
 
-app.get('/', function(request, response) {
-    response.sendFile('index.html', { root: 'views/' });
+app.get('/api/test', function(request, response) {
+    response.send({ val: 1 });
 });
 
 var port = process.argv[2] || 8080;

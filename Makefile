@@ -2,7 +2,7 @@ SHELL=/bin/bash
 
 .DEFAULT_GOAL := help
 
-.PHONY: help configure run stop all css js
+.PHONY: help configure clean debug run stop build build-client build-server
 
 .SECONDEXPANSION:
 
@@ -14,28 +14,37 @@ configure: ## set up environment
 	yarn install
 
 clean: ## clean build artifacts
-	rm -f scripts/*.min.js scripts/*.min.js.map
-	rm -f server/*.min.js server/*.min.js.map
-	rm -f styles/*.css styles/*.css.map
+	rm -Rf dist/
+	rm -f server/*.min.js
+	rm -f server/*.dbg.js
+	rm -f server/*.js.map
 
-run: all ## build site and start the application server
+debug: server/server.dbg.js ## build and start the debug app & API servers
+	$$(npm bin)/parcel serve views/index.html -p 8080 & echo $$! > client.pid
+	$$(npm bin)/nodemon server/server.dbg.js 8081 & echo $$! > api.pid
+	$$(npm bin)/rollup --watch -c rollup.server.js -m --environment BUILD:development -f cjs -i server/server.js -o server/server.dbg.js 2>&1 & echo $$! > watch.pid
+
+test:
+	$$(npm bin)/rollup --watch -c rollup.server.js -m --environment BUILD:development -f cjs -i server/server.js -o server/server.dbg.js 2>&1
+
+run: build ## build and run the production server
 	node server/server.min.js 8080 & echo $$! > server.pid
 
-stop: ## stop running server instance
+stop: ## stop running server instances
 	kill $$(cat *.pid) ; rm *.pid
 
-all: css js ## compile/bundle all client resources
+build: build-client build-server #build production server
 
-css: styles/site.css ## compile/bundle client CSS
+build-client:  ## build app for production
+	$$(npm bin)/parcel build views/index.html --out-dir dist/ --public-url ./
 
-js: scripts/site.min.js server/server.min.js ## compile/bundle client JS
+build-server: server/server.min.js ## build server for production
 
-# TODO why does --compress not do anything?
-styles/%.css: styles/%.styl $$(shell $$(shell npm bin)/stylus --deps styles/%.styl)
-	$$(npm bin)/stylus --include-css --sourcemap $(WATCH) --compress --out $@ $<
+server/%.min.js: server/%.js $$(shell nodejs deps.js server/%.js 2>/dev/null)
+	$$(npm bin)/rollup -c rollup.server.js -m --environment BUILD:production -f cjs -i $< -o $@
 
-server/%.min.js: server/%.js
-	$$(npm bin)/rollup --config rollup.server.js --sourcemap $(WATCH) --input $< --output.format cjs --output.file $@
+server/%.dbg.js: server/%.js $$(shell nodejs deps.js server/%.js 2>/dev/null)
+	$$(npm bin)/rollup -c rollup.server.js -m --environment BUILD:development -f cjs -i $< -o $@
 
-scripts/%.min.js: scripts/%.js
-	$$(npm bin)/rollup --config rollup.client.js --sourcemap $(WATCH) --input $< --output.format es --output.file $@
+# styles/%.css: styles/%.styl $$(shell $$(shell npm bin)/stylus --deps styles/%.styl)
+# 	$$(npm bin)/stylus --include-css --sourcemap $(WATCH) --compress --out $@ $<

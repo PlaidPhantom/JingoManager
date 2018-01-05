@@ -1,10 +1,11 @@
+.cache/
 node_modules/
+dist/
 
 *.pid
+yarn-error.log
 
-**/*.css
-**/*.css.map
+**/*.dbg.js
+**/*.dbg.js.map
 **/*.min.js
 **/*.min.js.map
-
-yarn-error.log
